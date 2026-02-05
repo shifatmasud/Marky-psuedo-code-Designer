@@ -1,9 +1,10 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Properties to mirror from the textarea to the hidden div
+// Properties to mirror from the textarea/input to the hidden div
 const properties = [
     'boxSizing',
     'width',
@@ -37,14 +38,14 @@ const properties = [
 
 let mirrorDiv: HTMLDivElement | null = null;
 
-function createMirrorDiv(element: HTMLTextAreaElement) {
+function createMirrorDiv() {
     if (mirrorDiv) return;
     mirrorDiv = document.createElement('div');
     document.body.appendChild(mirrorDiv);
 }
 
-export function getCaretCoordinates(element: HTMLTextAreaElement, position: number) {
-    createMirrorDiv(element);
+export function getCaretCoordinates(element: HTMLTextAreaElement | HTMLInputElement, position: number) {
+    createMirrorDiv();
 
     if (!mirrorDiv) {
         return null;
