@@ -20,17 +20,12 @@ const NoteEditor = () => {
     const end = textarea.selectionEnd;
     const text = textarea.value;
 
-    let cursorPosition = start + textToInsert.length;
-    const closingTagIndex = textToInsert.indexOf('</');
-    if (closingTagIndex !== -1) {
-        cursorPosition = start + closingTagIndex;
-    }
-
     const newText = text.substring(0, start) + textToInsert + text.substring(end);
     setContent(newText);
 
     requestAnimationFrame(() => {
         textarea.focus();
+        const cursorPosition = start + textToInsert.length;
         textarea.selectionStart = textarea.selectionEnd = cursorPosition;
     });
   };

@@ -11,17 +11,17 @@ interface ActionPanelProps {
 }
 
 const TAGS = [
-    { label: 'header', value: '<header></header>' },
-    { label: 'nav', value: '<nav></nav>' },
-    { label: 'main', value: '<main></main>' },
-    { label: 'section', value: '<section></section>' },
-    { label: 'article', value: '<article></article>' },
-    { label: 'aside', value: '<aside></aside>' },
-    { label: 'footer', value: '<footer></footer>' },
-    { label: 'div', value: '<div></div>' },
-    { label: 'p', value: '<p></p>' },
-    { label: 'h1', value: '<h1></h1>' },
-    { label: 'h2', value: '<h2></h2>' },
+    { label: 'header', value: 'header' },
+    { label: 'nav', value: 'nav' },
+    { label: 'main', value: 'main' },
+    { label: 'section', value: 'section' },
+    { label: 'article', value: 'article' },
+    { label: 'aside', value: 'aside' },
+    { label: 'footer', value: 'footer' },
+    { label: 'div', value: 'div' },
+    { label: 'p', value: 'p' },
+    { label: 'h1', value: 'h1' },
+    { label: 'h2', value: 'h2' },
 ];
 
 const ActionPanel: React.FC<ActionPanelProps> = ({ onInsert }) => {

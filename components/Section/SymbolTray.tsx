@@ -14,10 +14,6 @@ const SYMBOLS = [
     { label: '│', value: '│  ' },
     { label: '├─', value: '├─ ' },
     { label: '└─', value: '└─ ' },
-    { label: '─', value: '──' },
-    { label: '┬', value: '┬' },
-    { label: '┌', value: '┌' },
-    { label: '┐', value: '┐' },
 ];
 
 
