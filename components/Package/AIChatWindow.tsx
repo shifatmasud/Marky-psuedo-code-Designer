@@ -150,7 +150,7 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
             contents: [
               { role: 'user', parts: [{ text: userMessage }] },
               { role: 'model', parts: [{ functionCall: call }] },
-              { role: 'user', parts: [{ functionResponse: { name: call.name, response: { result: toolResult }, id: call.id } }] }
+              { role: 'user', parts: [{ functionResponse: { name: call.name, response: { result: toolResult } } }] }
             ],
             config: { tools }
           });
