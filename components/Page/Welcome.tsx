@@ -10,6 +10,8 @@ import TablePicker from '../Package/TablePicker.tsx';
 import TreeBuilder from '../Package/TreeBuilder.tsx';
 import ConfigBuilder from '../Package/ConfigBuilder.tsx';
 import UndoRedo from '../Package/UndoRedo.tsx';
+import AIChatWindow from '../Package/AIChatWindow.tsx';
+import AIToggleButton from '../Core/AIToggleButton.tsx';
 import { getCaretCoordinates } from '../../utils/caretPosition.ts';
 
 const COMMANDS = [
@@ -47,6 +49,9 @@ const Welcome = () => {
   const [commandStart, setCommandStart] = useState<number | null>(null);
   const [filteredCommands, setFilteredCommands] = useState(COMMANDS);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // AI State
+  const [aiOpen, setAiOpen] = useState(false);
 
   // Builders State
   const [isPickingTable, setIsPickingTable] = useState(false);
@@ -340,6 +345,8 @@ const Welcome = () => {
 
   return (
     <main style={styles.container}>
+      <AIToggleButton onClick={() => setAiOpen(!aiOpen)} isOpen={aiOpen} />
+      
       <textarea
         ref={textareaRef}
         style={styles.editor}
@@ -381,6 +388,13 @@ const Welcome = () => {
         isOpen={toolbarOpen}
         position={toolbarPosition}
         onFormat={handleFormat}
+      />
+      <AIChatWindow 
+        isOpen={aiOpen} 
+        onClose={() => setAiOpen(false)}
+        editorContent={content}
+        onUpdateContent={updateContent}
+        onInsertAtCaret={insertAtCaret}
       />
       <UndoRedo 
         onUndo={handleUndo} 
