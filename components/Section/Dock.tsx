@@ -3,55 +3,62 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useTheme } from '../../Theme.tsx';
-import DockIcon from '../Core/DockIcon.tsx';
-import { WindowId, WindowState } from '../../types/index.tsx';
+import ActionButton from '../Core/DockIcon.tsx';
 
-interface DockProps {
-    windows: Record<WindowId, WindowState>;
-    toggleWindow: (id: WindowId) => void;
+interface ActionPanelProps {
+    onInsert: (text: string) => void;
 }
 
-const DOCK_ITEMS = [
-  { id: 'control' as WindowId, icon: 'ph-sliders', label: 'Control' },
-  { id: 'code' as WindowId, icon: 'ph-code', label: 'Code' },
-  { id: 'console' as WindowId, icon: 'ph-terminal-window', label: 'Console' },
+const TAGS = [
+    { label: 'header', value: '<header></header>' },
+    { label: 'nav', value: '<nav></nav>' },
+    { label: 'main', value: '<main></main>' },
+    { label: 'section', value: '<section></section>' },
+    { label: 'article', value: '<article></article>' },
+    { label: 'aside', value: '<aside></aside>' },
+    { label: 'footer', value: '<footer></footer>' },
+    { label: 'div', value: '<div></div>' },
+    { label: 'p', value: '<p></p>' },
+    { label: 'h1', value: '<h1></h1>' },
+    { label: 'h2', value: '<h2></h2>' },
 ];
 
-const Dock: React.FC<DockProps> = ({ windows, toggleWindow }) => {
+const ActionPanel: React.FC<ActionPanelProps> = ({ onInsert }) => {
     const { theme } = useTheme();
 
+    const styles: { [key: string]: React.CSSProperties } = {
+        panel: {
+            width: '100%',
+            backgroundColor: theme.Color.Base.Surface[2],
+            borderTop: `1px solid ${theme.Color.Base.Surface[3]}`,
+            display: 'flex',
+            justifyContent: 'center',
+            padding: `${theme.spacing['Space.S']} 0`,
+            overflowX: 'auto',
+            pointerEvents: 'auto', // Re-enable pointer events for this panel
+        },
+        container: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: theme.spacing['Space.S'],
+            padding: `0 ${theme.spacing['Space.L']}`
+        },
+    };
+
     return (
-      <motion.div
-        drag
-        dragMomentum={false}
-        style={{
-          position: 'absolute',
-          bottom: theme.spacing['Space.L'],
-          left: '50%',
-          x: '-50%',
-          display: 'flex',
-          gap: theme.spacing['Space.S'],
-          padding: theme.spacing['Space.S'],
-          backgroundColor: `${theme.Color.Base.Surface[1]}aa`,
-          backdropFilter: 'blur(16px)',
-          borderRadius: '24px', // Peel shape
-          boxShadow: theme.effects['Effect.Shadow.Drop.3'],
-          border: `1px solid ${theme.Color.Base.Surface[3]}`,
-          zIndex: 1000,
-        }}
-      >
-        {DOCK_ITEMS.map((item) => (
-          <DockIcon
-            key={item.id}
-            icon={item.icon}
-            isActive={windows[item.id].isOpen}
-            onClick={() => toggleWindow(item.id)}
-          />
-        ))}
-      </motion.div>
+        <div style={styles.panel}>
+            <div style={styles.container}>
+                {TAGS.map((item) => (
+                    <ActionButton
+                        key={item.label}
+                        label={item.label}
+                        onClick={() => onInsert(item.value)}
+                    />
+                ))}
+            </div>
+        </div>
     );
 };
 
-export default Dock;
+export default ActionPanel;
