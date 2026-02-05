@@ -8,10 +8,12 @@ import { useTheme } from '../../Theme.tsx';
 import CommandMenu from '../Package/CommandMenu.tsx';
 import SelectionToolbar from '../Package/SelectionToolbar.tsx';
 import TablePicker from '../Package/TablePicker.tsx';
+import TreeBuilder from '../Package/TreeBuilder.tsx';
 import { getCaretCoordinates } from '../../utils/caretPosition.ts';
 
 const COMMANDS = [
     { label: 'Table', value: 'TABLE_CMD', icon: 'ph-table' },
+    { label: 'Tree', value: 'TREE_CMD', icon: 'ph-tree-structure' },
     { label: 'Corner', value: '└─ ', icon: 'ph-arrow-elbow-down-right' },
     { label: 'header', value: 'header ', icon: 'ph-arrow-fat-lines-up' },
     { label: 'nav', value: 'nav ', icon: 'ph-compass' },
@@ -40,8 +42,9 @@ const Welcome = () => {
   const [filteredCommands, setFilteredCommands] = useState(COMMANDS);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Table Builder State
+  // Builders State
   const [isPickingTable, setIsPickingTable] = useState(false);
+  const [isBuildingTree, setIsBuildingTree] = useState(false);
 
   // Selection Toolbar State
   const [toolbarOpen, setToolbarOpen] = useState(false);
@@ -59,6 +62,11 @@ const Welcome = () => {
       setIsPickingTable(true);
       setMenuOpen(false);
       return;
+    }
+    if (value === 'TREE_CMD') {
+        setIsBuildingTree(true);
+        setMenuOpen(false);
+        return;
     }
 
     const textarea = textareaRef.current;
@@ -94,6 +102,16 @@ const Welcome = () => {
 
   const handleTableSelect = (rows: number, cols: number) => {
     const tableMarkdown = generateMarkdownTable(rows, cols);
+    insertAtCaret(tableMarkdown);
+    setIsPickingTable(false);
+  };
+
+  const handleTreeSelect = (treeMarkdown: string) => {
+    insertAtCaret('\n' + treeMarkdown + '\n');
+    setIsBuildingTree(false);
+  };
+
+  const insertAtCaret = (text: string) => {
     const textarea = textareaRef.current;
     if (!textarea || commandStart === null) return;
 
@@ -101,14 +119,13 @@ const Welcome = () => {
     const end = textarea.selectionStart;
     const currentContent = textarea.value;
     
-    const newText = currentContent.substring(0, start) + tableMarkdown + currentContent.substring(end);
+    const newText = currentContent.substring(0, start) + text + currentContent.substring(end);
     setContent(newText);
-    setIsPickingTable(false);
     setCommandStart(null);
 
     requestAnimationFrame(() => {
       textarea.focus();
-      const cursorPosition = start + tableMarkdown.length;
+      const cursorPosition = start + text.length;
       textarea.selectionStart = textarea.selectionEnd = cursorPosition;
     });
   };
@@ -131,6 +148,7 @@ const Welcome = () => {
     if (currentCommandStart !== null) {
         setToolbarOpen(false); 
         setIsPickingTable(false);
+        setIsBuildingTree(false);
         const currentCommand = text.substring(currentCommandStart + 1, cursorPosition);
         setCommand(currentCommand);
         setCommandStart(currentCommandStart);
@@ -156,6 +174,7 @@ const Welcome = () => {
       if (selectionStart !== selectionEnd) {
           closeMenu();
           setIsPickingTable(false);
+          setIsBuildingTree(false);
           selectionRef.current = { start: selectionStart, end: selectionEnd };
           const startCoords = getCaretCoordinates(textarea, selectionStart);
           
@@ -213,6 +232,10 @@ const Welcome = () => {
     }
     if (isPickingTable && (e.key === 'Escape')) {
         setIsPickingTable(false);
+        return;
+    }
+    if (isBuildingTree && (e.key === 'Escape')) {
+        setIsBuildingTree(false);
         return;
     }
     if (!menuOpen) return;
@@ -296,6 +319,12 @@ const Welcome = () => {
         position={menuPosition}
         onSelect={handleTableSelect}
         onClose={() => setIsPickingTable(false)}
+      />
+      <TreeBuilder 
+        isOpen={isBuildingTree}
+        position={menuPosition}
+        onSelect={handleTreeSelect}
+        onClose={() => setIsBuildingTree(false)}
       />
       <SelectionToolbar 
         isOpen={toolbarOpen}
