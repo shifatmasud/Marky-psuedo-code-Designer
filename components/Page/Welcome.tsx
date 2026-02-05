@@ -1,4 +1,3 @@
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -10,6 +9,7 @@ import SelectionToolbar from '../Package/SelectionToolbar.tsx';
 import TablePicker from '../Package/TablePicker.tsx';
 import TreeBuilder from '../Package/TreeBuilder.tsx';
 import ConfigBuilder from '../Package/ConfigBuilder.tsx';
+import UndoRedo from '../Package/UndoRedo.tsx';
 import { getCaretCoordinates } from '../../utils/caretPosition.ts';
 
 const COMMANDS = [
@@ -36,6 +36,10 @@ const Welcome = () => {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // History State
+  const [history, setHistory] = useState<string[]>([]);
+  const [future, setFuture] = useState<string[]>([]);
+
   // Command Menu State
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -53,6 +57,30 @@ const Welcome = () => {
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
   const selectionRef = useRef({ start: 0, end: 0 });
+
+  const updateContent = useCallback((newText: string, saveToHistory: boolean = true) => {
+    if (saveToHistory) {
+      setHistory(prev => [...prev, content].slice(-50)); // Keep last 50 states
+      setFuture([]);
+    }
+    setContent(newText);
+  }, [content]);
+
+  const handleUndo = useCallback(() => {
+    if (history.length === 0) return;
+    const previous = history[history.length - 1];
+    setFuture(prev => [content, ...prev]);
+    setHistory(prev => prev.slice(0, -1));
+    setContent(previous);
+  }, [history, content]);
+
+  const handleRedo = useCallback(() => {
+    if (future.length === 0) return;
+    const next = future[0];
+    setHistory(prev => [...prev, content]);
+    setFuture(prev => prev.slice(1));
+    setContent(next);
+  }, [future, content]);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -85,7 +113,7 @@ const Welcome = () => {
     const currentContent = textarea.value;
     
     const newText = currentContent.substring(0, start) + value + currentContent.substring(end);
-    setContent(newText);
+    updateContent(newText);
     closeMenu();
 
     requestAnimationFrame(() => {
@@ -123,15 +151,14 @@ const Welcome = () => {
 
   const insertAtCaret = (text: string) => {
     const textarea = textareaRef.current;
-    if (!textarea || commandStart === null) return;
+    if (!textarea) return;
 
-    const start = commandStart;
-    const end = textarea.selectionStart;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
     const currentContent = textarea.value;
     
     const newText = currentContent.substring(0, start) + text + currentContent.substring(end);
-    setContent(newText);
-    setCommandStart(null);
+    updateContent(newText);
 
     requestAnimationFrame(() => {
       textarea.focus();
@@ -143,7 +170,7 @@ const Welcome = () => {
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     const cursorPosition = e.target.selectionStart;
-    setContent(text);
+    updateContent(text);
 
     let currentCommandStart = null;
     for (let i = cursorPosition - 1; i >= 0; i--) {
@@ -219,7 +246,7 @@ const Welcome = () => {
     const formattedText = `${wrapper}${selectedText}${wrapper}`;
 
     const newContent = content.substring(0, start) + formattedText + content.substring(end);
-    setContent(newContent);
+    updateContent(newContent);
     setToolbarOpen(false);
 
     requestAnimationFrame(() => {
@@ -242,6 +269,20 @@ const Welcome = () => {
     if (isPickingTable && (e.key === 'Escape')) { setIsPickingTable(false); return; }
     if (isBuildingTree && (e.key === 'Escape')) { setIsBuildingTree(false); return; }
     if (isBuildingConfig && (e.key === 'Escape')) { setIsBuildingConfig(false); return; }
+    
+    // Global Undo/Redo Shortcuts
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) handleRedo();
+        else handleUndo();
+        return;
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+        return;
+    }
+
     if (!menuOpen) return;
 
     switch (e.key) {
@@ -340,6 +381,12 @@ const Welcome = () => {
         isOpen={toolbarOpen}
         position={toolbarPosition}
         onFormat={handleFormat}
+      />
+      <UndoRedo 
+        onUndo={handleUndo} 
+        onRedo={handleRedo} 
+        canUndo={history.length > 0} 
+        canRedo={future.length > 0} 
       />
     </main>
   );
