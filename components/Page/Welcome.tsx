@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -6,9 +7,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTheme } from '../../Theme.tsx';
 import CommandMenu from '../Package/CommandMenu.tsx';
 import SelectionToolbar from '../Package/SelectionToolbar.tsx';
+import TablePicker from '../Package/TablePicker.tsx';
 import { getCaretCoordinates } from '../../utils/caretPosition.ts';
 
 const COMMANDS = [
+    { label: 'Table', value: 'TABLE_CMD', icon: 'ph-table' },
     { label: 'Corner', value: '└─ ', icon: 'ph-arrow-elbow-down-right' },
     { label: 'header', value: 'header ', icon: 'ph-arrow-fat-lines-up' },
     { label: 'nav', value: 'nav ', icon: 'ph-compass' },
@@ -37,6 +40,9 @@ const Welcome = () => {
   const [filteredCommands, setFilteredCommands] = useState(COMMANDS);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // Table Builder State
+  const [isPickingTable, setIsPickingTable] = useState(false);
+
   // Selection Toolbar State
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
@@ -49,6 +55,12 @@ const Welcome = () => {
   }, []);
 
   const handleInsert = (value: string) => {
+    if (value === 'TABLE_CMD') {
+      setIsPickingTable(true);
+      setMenuOpen(false);
+      return;
+    }
+
     const textarea = textareaRef.current;
     if (!textarea || commandStart === null) return;
 
@@ -64,6 +76,40 @@ const Welcome = () => {
         textarea.focus();
         const cursorPosition = start + value.length;
         textarea.selectionStart = textarea.selectionEnd = cursorPosition;
+    });
+  };
+
+  const generateMarkdownTable = (rows: number, cols: number) => {
+    let table = '\n';
+    // Header
+    table += '| ' + Array(cols).fill('Header').join(' | ') + ' |\n';
+    // Separator
+    table += '| ' + Array(cols).fill('---').join(' | ') + ' |\n';
+    // Body
+    for (let i = 0; i < rows; i++) {
+        table += '| ' + Array(cols).fill('Cell').join(' | ') + ' |\n';
+    }
+    return table + '\n';
+  };
+
+  const handleTableSelect = (rows: number, cols: number) => {
+    const tableMarkdown = generateMarkdownTable(rows, cols);
+    const textarea = textareaRef.current;
+    if (!textarea || commandStart === null) return;
+
+    const start = commandStart;
+    const end = textarea.selectionStart;
+    const currentContent = textarea.value;
+    
+    const newText = currentContent.substring(0, start) + tableMarkdown + currentContent.substring(end);
+    setContent(newText);
+    setIsPickingTable(false);
+    setCommandStart(null);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const cursorPosition = start + tableMarkdown.length;
+      textarea.selectionStart = textarea.selectionEnd = cursorPosition;
     });
   };
   
@@ -83,7 +129,8 @@ const Welcome = () => {
     }
 
     if (currentCommandStart !== null) {
-        setToolbarOpen(false); // Ensure toolbar is closed when typing a command
+        setToolbarOpen(false); 
+        setIsPickingTable(false);
         const currentCommand = text.substring(currentCommandStart + 1, cursorPosition);
         setCommand(currentCommand);
         setCommandStart(currentCommandStart);
@@ -107,13 +154,13 @@ const Welcome = () => {
       const { selectionStart, selectionEnd } = textarea;
   
       if (selectionStart !== selectionEnd) {
-          closeMenu(); // Close command menu when making a selection
+          closeMenu();
+          setIsPickingTable(false);
           selectionRef.current = { start: selectionStart, end: selectionEnd };
           const startCoords = getCaretCoordinates(textarea, selectionStart);
           
           if (startCoords) {
-              // Position toolbar above the start of the selection
-              const top = startCoords.top - 50; // Offset above the text line
+              const top = startCoords.top - 50; 
               const left = startCoords.left;
               setToolbarPosition({ top, left });
               setToolbarOpen(true);
@@ -162,6 +209,10 @@ const Welcome = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (toolbarOpen && (e.key === 'Escape')) {
         setToolbarOpen(false);
+        return;
+    }
+    if (isPickingTable && (e.key === 'Escape')) {
+        setIsPickingTable(false);
         return;
     }
     if (!menuOpen) return;
@@ -239,6 +290,12 @@ const Welcome = () => {
         items={filteredCommands}
         onSelect={handleInsert}
         selectedIndex={selectedIndex}
+      />
+      <TablePicker 
+        isOpen={isPickingTable}
+        position={menuPosition}
+        onSelect={handleTableSelect}
+        onClose={() => setIsPickingTable(false)}
       />
       <SelectionToolbar 
         isOpen={toolbarOpen}
