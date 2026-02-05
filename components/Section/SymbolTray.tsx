@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useTheme } from '../../Theme.tsx';
 import ActionButton from '../Core/DockIcon.tsx';
 
@@ -22,6 +23,9 @@ const SymbolTray: React.FC<SymbolTrayProps> = ({ onInsert }) => {
 
     const styles: { [key: string]: React.CSSProperties } = {
         tray: {
+            position: 'fixed',
+            bottom: `calc(${theme.spacing['Space.L']} + 56px + ${theme.spacing['Space.M']})`, // Position above FAB
+            left: '50%',
             display: 'inline-flex',
             alignItems: 'center',
             gap: theme.spacing['Space.S'],
@@ -29,14 +33,22 @@ const SymbolTray: React.FC<SymbolTrayProps> = ({ onInsert }) => {
             border: `1px solid ${theme.Color.Base.Surface[3]}`,
             borderRadius: theme.radius['Radius.M'],
             padding: theme.spacing['Space.S'],
-            marginBottom: theme.spacing['Space.M'],
             boxShadow: theme.effects['Effect.Shadow.Drop.2'],
-            pointerEvents: 'auto', // Enable pointer events for this tray
+            pointerEvents: 'auto',
+            zIndex: 10,
+            cursor: 'grab',
+            touchAction: 'none',
         }
     };
 
     return (
-        <div style={styles.tray}>
+        <motion.div
+            style={styles.tray}
+            drag
+            dragMomentum={false}
+            initial={{ x: '-50%', y: 0 }}
+            whileDrag={{ cursor: 'grabbing', scale: 1.05, boxShadow: theme.effects['Effect.Shadow.Drop.3'] }}
+        >
             {SYMBOLS.map((item) => (
                 <ActionButton
                     key={item.label}
@@ -44,7 +56,7 @@ const SymbolTray: React.FC<SymbolTrayProps> = ({ onInsert }) => {
                     onClick={() => onInsert(item.value)}
                 />
             ))}
-        </div>
+        </motion.div>
     );
 };
 

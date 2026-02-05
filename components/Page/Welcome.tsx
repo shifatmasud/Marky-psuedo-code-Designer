@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../Theme.tsx';
 import ActionPanel from '../Section/Dock.tsx';
 import SymbolTray from '../Section/SymbolTray.tsx';
 
-const NoteEditor = () => {
+const Welcome = () => {
   const { theme } = useTheme();
   const [content, setContent] = useState('');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleInsert = (textToInsert: string) => {
@@ -19,15 +21,22 @@ const NoteEditor = () => {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
-
+    
     const newText = text.substring(0, start) + textToInsert + text.substring(end);
     setContent(newText);
 
+    // After state update, focus and set cursor position
     requestAnimationFrame(() => {
         textarea.focus();
         const cursorPosition = start + textToInsert.length;
         textarea.selectionStart = textarea.selectionEnd = cursorPosition;
     });
+  };
+
+  const fabIconVariants = {
+    hidden: { rotate: -45, scale: 0.5, opacity: 0 },
+    visible: { rotate: 0, scale: 1, opacity: 1 },
+    exit: { rotate: 45, scale: 0.5, opacity: 0 },
   };
 
   const styles: { [key: string]: React.CSSProperties } = {
@@ -38,7 +47,7 @@ const NoteEditor = () => {
       flexDirection: 'column',
       alignItems: 'center',
       paddingTop: '8vh',
-      paddingBottom: '160px', // Increased space for both panels
+      paddingBottom: '8vh',
       boxSizing: 'border-box',
     },
     editor: {
@@ -56,16 +65,28 @@ const NoteEditor = () => {
       resize: 'none',
       caretColor: theme.Color.Signal.Content[1],
     },
-    bottomPanelContainer: {
+    fab: {
         position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        bottom: theme.spacing['Space.L'],
+        right: theme.spacing['Space.L'],
+        width: '56px',
+        height: '56px',
+        borderRadius: theme.radius['Radius.Full'],
+        backgroundColor: theme.Color.Accent.Surface[1],
+        color: theme.Color.Accent.Content[1],
+        border: 'none',
+        cursor: 'pointer',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
-        zIndex: 10,
-        pointerEvents: 'none', // Pass clicks through container
+        justifyContent: 'center',
+        boxShadow: theme.effects['Effect.Shadow.Drop.2'],
+        zIndex: 21,
+        overflow: 'hidden',
+        touchAction: 'manipulation'
+    },
+    fabIcon: {
+        fontSize: '28px',
+        lineHeight: 0,
     }
   };
 
@@ -80,12 +101,37 @@ const NoteEditor = () => {
         spellCheck="false"
         autoFocus
       />
-      <div style={styles.bottomPanelContainer}>
-        <SymbolTray onInsert={handleInsert} />
-        <ActionPanel onInsert={handleInsert} />
-      </div>
+      
+      <SymbolTray onInsert={handleInsert} />
+
+      <ActionPanel 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+        onInsert={handleInsert} 
+      />
+
+      <motion.button
+        style={styles.fab}
+        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+        whileHover={{ scale: 1.1, boxShadow: theme.effects['Effect.Shadow.Drop.3'] }}
+        whileTap={{ scale: 0.95 }}
+        aria-label={isDrawerOpen ? 'Close actions' : 'Open actions'}
+      >
+          <AnimatePresence mode="wait" initial={false}>
+              <motion.i
+                  key={isDrawerOpen ? 'close' : 'add'}
+                  className={`ph-bold ${isDrawerOpen ? 'ph-x' : 'ph-plus'}`}
+                  style={styles.fabIcon}
+                  variants={fabIconVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+              />
+          </AnimatePresence>
+      </motion.button>
     </main>
   );
 };
 
-export default NoteEditor;
+export default Welcome;
