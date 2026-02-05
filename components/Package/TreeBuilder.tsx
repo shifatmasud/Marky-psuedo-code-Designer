@@ -65,6 +65,7 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
   }, []);
 
   const generateTree = () => {
+    if (nodes.length === 0) return '';
     let result = '';
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
@@ -101,19 +102,22 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
     return result;
   };
 
-  const addNode = (index: number) => {
+  const addNode = (index: number | null) => {
     const newNode: TreeNode = {
       id: Math.random().toString(36).substr(2, 9),
       label: 'New Node',
-      depth: nodes[index].depth,
+      depth: index !== null ? nodes[index].depth : 0,
     };
+    if (index === null) {
+        setNodes([newNode]);
+        return;
+    }
     const newNodes = [...nodes];
     newNodes.splice(index + 1, 0, newNode);
     setNodes(newNodes);
   };
 
   const removeNode = (index: number) => {
-    if (nodes.length <= 1) return;
     const newNodes = nodes.filter((_, i) => i !== index);
     setNodes(newNodes);
   };
@@ -149,7 +153,6 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
 
         const coords = getCaretCoordinates(e.target, currentCommandStart);
         if (coords) {
-            // Adjust coordinates relative to the builder container
             setMenuPosition({ top: coords.top + coords.height, left: coords.left });
         }
     } else {
@@ -162,8 +165,6 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
     
     const currentNode = nodes[activeIdx];
     const text = currentNode.label;
-    // Replace from commandStart to current length? 
-    // Usually standard command replace:
     const newLabel = text.substring(0, commandStart) + value + text.substring(commandStart + command.length + 1);
     updateLabel(activeIdx, newLabel);
     closeLabelMenu();
@@ -229,7 +230,7 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
       display: 'flex',
       flexDirection: 'column',
       gap: theme.spacing['Space.M'],
-      overflow: 'visible', // Allow command menu to pop out
+      overflow: 'visible',
     },
     header: {
         display: 'flex',
@@ -244,6 +245,7 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
       gap: theme.spacing['Space.XS'],
       overflowY: 'auto',
       paddingRight: '4px',
+      minHeight: '100px',
     },
     nodeRow: {
       display: 'flex',
@@ -272,6 +274,16 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: '4px',
+    },
+    emptyState: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: theme.spacing['Space.M'],
+        color: theme.Color.Base.Content[3],
+        padding: theme.spacing['Space.L'],
     }
   };
 
@@ -291,54 +303,65 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
           >
             <div style={styles.header}>
               <span style={{ ...theme.Type.Readable.Label.S, color: theme.Color.Base.Content[1], fontWeight: 700 }}>TREE BUILDER</span>
-              <Button label="Insert" size="S" onClick={() => onSelect(generateTree())} />
+              <Button 
+                label="Insert" 
+                size="S" 
+                disabled={nodes.length === 0}
+                onClick={() => onSelect(generateTree())} 
+              />
             </div>
 
             <div style={styles.list}>
-              {nodes.map((node, idx) => (
-                <div key={node.id} style={{ ...styles.nodeRow, paddingLeft: `${node.depth * 16}px` }}>
-                  <button 
-                    style={styles.controlBtn} 
-                    onClick={() => indent(idx, -1)}
-                    title="Outdent"
-                  >
-                    <i className="ph-bold ph-caret-left" />
-                  </button>
-                  <button 
-                    style={styles.controlBtn} 
-                    onClick={() => indent(idx, 1)}
-                    title="Indent"
-                  >
-                    <i className="ph-bold ph-caret-right" />
-                  </button>
-                  <input
-                    style={styles.input}
-                    value={node.label}
-                    onChange={(e) => handleLabelChange(idx, e)}
-                    onKeyDown={(e) => handleKeyDown(idx, e)}
-                    onBlur={() => {
-                        // Small timeout to allow menu click
-                        setTimeout(() => { if (!menuOpen) setActiveIdx(null); }, 200);
-                    }}
-                    placeholder="Node label..."
-                    autoFocus={idx === nodes.length - 1 && node.label === 'New Node'}
-                  />
-                  <button 
-                    style={styles.controlBtn} 
-                    onClick={() => addNode(idx)}
-                    title="Add Sibling"
-                  >
-                    <i className="ph-bold ph-plus" />
-                  </button>
-                  <button 
-                    style={{ ...styles.controlBtn, color: theme.Color.Error.Content[1] }} 
-                    onClick={() => removeNode(idx)}
-                    title="Delete"
-                  >
-                    <i className="ph-bold ph-trash" />
-                  </button>
+              {nodes.length > 0 ? (
+                nodes.map((node, idx) => (
+                    <div key={node.id} style={{ ...styles.nodeRow, paddingLeft: `${node.depth * 16}px` }}>
+                      <button 
+                        style={styles.controlBtn} 
+                        onClick={() => indent(idx, -1)}
+                        title="Outdent"
+                      >
+                        <i className="ph-bold ph-caret-left" />
+                      </button>
+                      <button 
+                        style={styles.controlBtn} 
+                        onClick={() => indent(idx, 1)}
+                        title="Indent"
+                      >
+                        <i className="ph-bold ph-caret-right" />
+                      </button>
+                      <input
+                        style={styles.input}
+                        value={node.label}
+                        onChange={(e) => handleLabelChange(idx, e)}
+                        onKeyDown={(e) => handleKeyDown(idx, e)}
+                        onBlur={() => {
+                            setTimeout(() => { if (!menuOpen) setActiveIdx(null); }, 200);
+                        }}
+                        placeholder="Node label..."
+                        autoFocus={idx === nodes.length - 1 && node.label === 'New Node'}
+                      />
+                      <button 
+                        style={styles.controlBtn} 
+                        onClick={() => addNode(idx)}
+                        title="Add Sibling"
+                      >
+                        <i className="ph-bold ph-plus" />
+                      </button>
+                      <button 
+                        style={{ ...styles.controlBtn, color: theme.Color.Error.Content[1] }} 
+                        onClick={() => removeNode(idx)}
+                        title="Delete"
+                      >
+                        <i className="ph-bold ph-trash" />
+                      </button>
+                    </div>
+                  ))
+              ) : (
+                <div style={styles.emptyState}>
+                    <p style={{ ...theme.Type.Readable.Label.M, margin: 0 }}>No nodes defined</p>
+                    <Button label="Add Node" size="S" variant="outline" icon="ph-plus" onClick={() => addNode(null)} />
                 </div>
-              ))}
+              )}
             </div>
 
             <CommandMenu 

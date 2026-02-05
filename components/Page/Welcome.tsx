@@ -9,11 +9,13 @@ import CommandMenu from '../Package/CommandMenu.tsx';
 import SelectionToolbar from '../Package/SelectionToolbar.tsx';
 import TablePicker from '../Package/TablePicker.tsx';
 import TreeBuilder from '../Package/TreeBuilder.tsx';
+import ConfigBuilder from '../Package/ConfigBuilder.tsx';
 import { getCaretCoordinates } from '../../utils/caretPosition.ts';
 
 const COMMANDS = [
     { label: 'Table', value: 'TABLE_CMD', icon: 'ph-table' },
     { label: 'Tree', value: 'TREE_CMD', icon: 'ph-tree-structure' },
+    { label: 'Config', value: 'CONFIG_CMD', icon: 'ph-gear-six' },
     { label: 'Corner', value: '└─ ', icon: 'ph-arrow-elbow-down-right' },
     { label: 'header', value: 'header ', icon: 'ph-arrow-fat-lines-up' },
     { label: 'nav', value: 'nav ', icon: 'ph-compass' },
@@ -45,6 +47,7 @@ const Welcome = () => {
   // Builders State
   const [isPickingTable, setIsPickingTable] = useState(false);
   const [isBuildingTree, setIsBuildingTree] = useState(false);
+  const [isBuildingConfig, setIsBuildingConfig] = useState(false);
 
   // Selection Toolbar State
   const [toolbarOpen, setToolbarOpen] = useState(false);
@@ -65,6 +68,11 @@ const Welcome = () => {
     }
     if (value === 'TREE_CMD') {
         setIsBuildingTree(true);
+        setMenuOpen(false);
+        return;
+    }
+    if (value === 'CONFIG_CMD') {
+        setIsBuildingConfig(true);
         setMenuOpen(false);
         return;
     }
@@ -89,11 +97,8 @@ const Welcome = () => {
 
   const generateMarkdownTable = (rows: number, cols: number) => {
     let table = '\n';
-    // Header
     table += '| ' + Array(cols).fill('Header').join(' | ') + ' |\n';
-    // Separator
     table += '| ' + Array(cols).fill('---').join(' | ') + ' |\n';
-    // Body
     for (let i = 0; i < rows; i++) {
         table += '| ' + Array(cols).fill('Cell').join(' | ') + ' |\n';
     }
@@ -109,6 +114,11 @@ const Welcome = () => {
   const handleTreeSelect = (treeMarkdown: string) => {
     insertAtCaret('\n' + treeMarkdown + '\n');
     setIsBuildingTree(false);
+  };
+
+  const handleConfigSelect = (configMarkdown: string) => {
+    insertAtCaret('\n' + configMarkdown + '\n');
+    setIsBuildingConfig(false);
   };
 
   const insertAtCaret = (text: string) => {
@@ -149,6 +159,7 @@ const Welcome = () => {
         setToolbarOpen(false); 
         setIsPickingTable(false);
         setIsBuildingTree(false);
+        setIsBuildingConfig(false);
         const currentCommand = text.substring(currentCommandStart + 1, cursorPosition);
         setCommand(currentCommand);
         setCommandStart(currentCommandStart);
@@ -175,6 +186,7 @@ const Welcome = () => {
           closeMenu();
           setIsPickingTable(false);
           setIsBuildingTree(false);
+          setIsBuildingConfig(false);
           selectionRef.current = { start: selectionStart, end: selectionEnd };
           const startCoords = getCaretCoordinates(textarea, selectionStart);
           
@@ -226,18 +238,10 @@ const Welcome = () => {
   }, [command, menuOpen]);
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (toolbarOpen && (e.key === 'Escape')) {
-        setToolbarOpen(false);
-        return;
-    }
-    if (isPickingTable && (e.key === 'Escape')) {
-        setIsPickingTable(false);
-        return;
-    }
-    if (isBuildingTree && (e.key === 'Escape')) {
-        setIsBuildingTree(false);
-        return;
-    }
+    if (toolbarOpen && (e.key === 'Escape')) { setToolbarOpen(false); return; }
+    if (isPickingTable && (e.key === 'Escape')) { setIsPickingTable(false); return; }
+    if (isBuildingTree && (e.key === 'Escape')) { setIsBuildingTree(false); return; }
+    if (isBuildingConfig && (e.key === 'Escape')) { setIsBuildingConfig(false); return; }
     if (!menuOpen) return;
 
     switch (e.key) {
@@ -325,6 +329,12 @@ const Welcome = () => {
         position={menuPosition}
         onSelect={handleTreeSelect}
         onClose={() => setIsBuildingTree(false)}
+      />
+      <ConfigBuilder 
+        isOpen={isBuildingConfig}
+        position={menuPosition}
+        onSelect={handleConfigSelect}
+        onClose={() => setIsBuildingConfig(false)}
       />
       <SelectionToolbar 
         isOpen={toolbarOpen}

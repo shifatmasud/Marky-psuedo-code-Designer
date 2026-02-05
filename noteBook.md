@@ -16,6 +16,7 @@ A log of all tasks, ideas, and progress for this project.
 
 ## Done
 
+-   **[2024-05-21 15:00]**: Implemented a Markdown Config Builder accessible via `/config`. Allows users to visually construct YAML-style configuration blocks with nested properties. Added internal `/` command menu support for common CSS properties within the builder.
 -   **[2024-05-21 14:45]**: Implemented a Markdown Tree Builder accessible via `/tree`. Users can visually construct a hierarchy and insert it as ASCII tree markdown.
 -   **[2024-05-21 14:30]**: Enhanced the TablePicker UI. Added "Signal" theme colors for selection range, interactive scaling on hover, and improved the dimension label with row/column counts.
 -   **[2024-05-21 14:15]**: Added an interactive Table Builder command. Users can now type `/table`, select the command, and choose grid dimensions (up to 8x8) via a visual picker to insert markdown tables.
