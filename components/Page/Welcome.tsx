@@ -5,11 +5,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTheme } from '../../Theme.tsx';
 import CommandMenu from '../Package/CommandMenu.tsx';
+import SelectionToolbar from '../Package/SelectionToolbar.tsx';
 import { getCaretCoordinates } from '../../utils/caretPosition.ts';
 
 const COMMANDS = [
-    { label: 'Line', value: '│  ', icon: 'ph-line-vertical' },
-    { label: 'T-Junction', value: '├─ ', icon: 'ph-git-t' },
     { label: 'Corner', value: '└─ ', icon: 'ph-arrow-elbow-down-right' },
     { label: 'header', value: 'header ', icon: 'ph-arrow-fat-lines-up' },
     { label: 'nav', value: 'nav ', icon: 'ph-compass' },
@@ -37,6 +36,11 @@ const Welcome = () => {
   const [commandStart, setCommandStart] = useState<number | null>(null);
   const [filteredCommands, setFilteredCommands] = useState(COMMANDS);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Selection Toolbar State
+  const [toolbarOpen, setToolbarOpen] = useState(false);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+  const selectionRef = useRef({ start: 0, end: 0 });
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -79,13 +83,13 @@ const Welcome = () => {
     }
 
     if (currentCommandStart !== null) {
+        setToolbarOpen(false); // Ensure toolbar is closed when typing a command
         const currentCommand = text.substring(currentCommandStart + 1, cursorPosition);
         setCommand(currentCommand);
         setCommandStart(currentCommandStart);
         setMenuOpen(true);
         setSelectedIndex(0);
 
-        // FIX: Replaced undefined `textarea` with `e.target` which is the textarea element.
         const coords = getCaretCoordinates(e.target, currentCommandStart);
         if (coords) {
             setMenuPosition({ top: coords.top + coords.height, left: coords.left });
@@ -93,6 +97,58 @@ const Welcome = () => {
     } else {
         closeMenu();
     }
+  };
+
+  const handleSelect = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    requestAnimationFrame(() => {
+      const { selectionStart, selectionEnd } = textarea;
+  
+      if (selectionStart !== selectionEnd) {
+          closeMenu(); // Close command menu when making a selection
+          selectionRef.current = { start: selectionStart, end: selectionEnd };
+          const startCoords = getCaretCoordinates(textarea, selectionStart);
+          
+          if (startCoords) {
+              // Position toolbar above the start of the selection
+              const top = startCoords.top - 50; // Offset above the text line
+              const left = startCoords.left;
+              setToolbarPosition({ top, left });
+              setToolbarOpen(true);
+          }
+      } else {
+          setToolbarOpen(false);
+      }
+    });
+  };
+
+  const handleFormat = (format: 'bold' | 'italic' | 'underline') => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const { start, end } = selectionRef.current;
+    if (start === end) return;
+
+    const selectedText = content.substring(start, end);
+    const wrappers = {
+        bold: '**',
+        italic: '*',
+        underline: '__'
+    };
+    const wrapper = wrappers[format];
+    const formattedText = `${wrapper}${selectedText}${wrapper}`;
+
+    const newContent = content.substring(0, start) + formattedText + content.substring(end);
+    setContent(newContent);
+    setToolbarOpen(false);
+
+    requestAnimationFrame(() => {
+        textarea.focus();
+        const newCursorPos = start + formattedText.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+    });
   };
 
   useEffect(() => {
@@ -104,6 +160,10 @@ const Welcome = () => {
   }, [command, menuOpen]);
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (toolbarOpen && (e.key === 'Escape')) {
+        setToolbarOpen(false);
+        return;
+    }
     if (!menuOpen) return;
 
     switch (e.key) {
@@ -167,7 +227,8 @@ const Welcome = () => {
         value={content}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onClick={() => { if (menuOpen) closeMenu(); }} // Close menu on click away
+        onClick={() => { if (menuOpen) closeMenu(); }}
+        onSelect={handleSelect}
         placeholder="Start writing... type '/' for commands"
         spellCheck="false"
         autoFocus
@@ -178,6 +239,11 @@ const Welcome = () => {
         items={filteredCommands}
         onSelect={handleInsert}
         selectedIndex={selectedIndex}
+      />
+      <SelectionToolbar 
+        isOpen={toolbarOpen}
+        position={toolbarPosition}
+        onFormat={handleFormat}
       />
     </main>
   );

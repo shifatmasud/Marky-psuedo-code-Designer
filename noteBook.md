@@ -14,6 +14,7 @@ A log of all tasks, ideas, and progress for this project.
 
 ## Done
 
+-   **[2024-05-21 14:00]**: Implemented a floating toolbar that appears on text selection for quick formatting (bold, italic, underline).
 -   **[2024-05-21 13:45]**: Replaced FAB and drawer with an inline `/` command menu for a more fluid writing experience.
 -   **[2024-05-21 13:30]**: Replaced Meta Prototype with a Minimalist Note Editor, featuring a clean textarea and a bottom action panel for inserting symbols and HTML tags.
 -   **[2024-05-21 13:15]**: Added a toggleable measurement overlay to the Stage, showing real-time dimensions for the button component.

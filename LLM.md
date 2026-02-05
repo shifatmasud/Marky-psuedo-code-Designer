@@ -14,6 +14,7 @@ Hello! You are an AI assistant helping to build this React application. Here are
 -   `components/Core/StateLayer.tsx`
 -   `components/Core/ThemeToggleButton.tsx`
 -   `components/Package/CommandMenu.tsx`
+-   `components/Package/SelectionToolbar.tsx`
 -   `components/Page/Welcome.tsx`
 -   `README.md`
 -   `LLM.md`
