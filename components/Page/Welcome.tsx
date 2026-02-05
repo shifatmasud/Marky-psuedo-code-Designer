@@ -2,41 +2,133 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTheme } from '../../Theme.tsx';
-import ActionPanel from '../Section/Dock.tsx';
-import SymbolTray from '../Section/SymbolTray.tsx';
+import CommandMenu from '../Package/CommandMenu.tsx';
+import { getCaretCoordinates } from '../../utils/caretPosition.ts';
+
+const COMMANDS = [
+    { label: 'Line', value: '│  ', icon: 'ph-line-vertical' },
+    { label: 'T-Junction', value: '├─ ', icon: 'ph-git-t' },
+    { label: 'Corner', value: '└─ ', icon: 'ph-arrow-elbow-down-right' },
+    { label: 'header', value: 'header ', icon: 'ph-arrow-fat-lines-up' },
+    { label: 'nav', value: 'nav ', icon: 'ph-compass' },
+    { label: 'main', value: 'main ', icon: 'ph-layout' },
+    { label: 'section', value: 'section ', icon: 'ph-squares-four' },
+    { label: 'article', value: 'article ', icon: 'ph-article' },
+    { label: 'aside', value: 'aside ', icon: 'ph-sidebar-simple' },
+    { label: 'footer', value: 'footer ', icon: 'ph-arrow-fat-lines-down' },
+    { label: 'div', value: 'div ', icon: 'ph-code' },
+    { label: 'p', value: 'p ', icon: 'ph-paragraph' },
+    { label: 'h1', value: 'h1 ', icon: 'ph-text-h-one' },
+    { label: 'h2', value: 'h2 ', icon: 'ph-text-h-two' },
+    { label: 'button', value: 'button ', icon: 'ph-cursor-click' },
+];
 
 const Welcome = () => {
   const { theme } = useTheme();
   const [content, setContent] = useState('');
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleInsert = (textToInsert: string) => {
+  // Command Menu State
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [command, setCommand] = useState('');
+  const [commandStart, setCommandStart] = useState<number | null>(null);
+  const [filteredCommands, setFilteredCommands] = useState(COMMANDS);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    setCommandStart(null);
+    setCommand('');
+  }, []);
+
+  const handleInsert = (value: string) => {
     const textarea = textareaRef.current;
-    if (!textarea) return;
+    if (!textarea || commandStart === null) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
+    const start = commandStart;
+    const end = textarea.selectionStart;
+    const currentContent = textarea.value;
     
-    const newText = text.substring(0, start) + textToInsert + text.substring(end);
+    const newText = currentContent.substring(0, start) + value + currentContent.substring(end);
     setContent(newText);
+    closeMenu();
 
-    // After state update, focus and set cursor position
     requestAnimationFrame(() => {
         textarea.focus();
-        const cursorPosition = start + textToInsert.length;
+        const cursorPosition = start + value.length;
         textarea.selectionStart = textarea.selectionEnd = cursorPosition;
     });
   };
+  
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    const cursorPosition = e.target.selectionStart;
+    setContent(text);
 
-  const fabIconVariants = {
-    hidden: { rotate: -45, scale: 0.5, opacity: 0 },
-    visible: { rotate: 0, scale: 1, opacity: 1 },
-    exit: { rotate: 45, scale: 0.5, opacity: 0 },
+    let currentCommandStart = null;
+    for (let i = cursorPosition - 1; i >= 0; i--) {
+        const char = text[i];
+        if (char === ' ' || char === '\n') break;
+        if (char === '/') {
+            currentCommandStart = i;
+            break;
+        }
+    }
+
+    if (currentCommandStart !== null) {
+        const currentCommand = text.substring(currentCommandStart + 1, cursorPosition);
+        setCommand(currentCommand);
+        setCommandStart(currentCommandStart);
+        setMenuOpen(true);
+        setSelectedIndex(0);
+
+        // FIX: Replaced undefined `textarea` with `e.target` which is the textarea element.
+        const coords = getCaretCoordinates(e.target, currentCommandStart);
+        if (coords) {
+            setMenuPosition({ top: coords.top + coords.height, left: coords.left });
+        }
+    } else {
+        closeMenu();
+    }
+  };
+
+  useEffect(() => {
+    if (menuOpen) {
+      setFilteredCommands(
+        COMMANDS.filter(c => c.label.toLowerCase().startsWith(command.toLowerCase()))
+      );
+    }
+  }, [command, menuOpen]);
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!menuOpen) return;
+
+    switch (e.key) {
+        case 'ArrowUp':
+            e.preventDefault();
+            setSelectedIndex(prev => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
+            break;
+        case 'ArrowDown':
+            e.preventDefault();
+            setSelectedIndex(prev => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
+            break;
+        case 'Enter':
+        case 'Tab':
+            e.preventDefault();
+            if (filteredCommands[selectedIndex]) {
+                handleInsert(filteredCommands[selectedIndex].value);
+            }
+            break;
+        case 'Escape':
+            e.preventDefault();
+            closeMenu();
+            break;
+        default:
+            break;
+    }
   };
 
   const styles: { [key: string]: React.CSSProperties } = {
@@ -65,29 +157,6 @@ const Welcome = () => {
       resize: 'none',
       caretColor: theme.Color.Signal.Content[1],
     },
-    fab: {
-        position: 'fixed',
-        bottom: theme.spacing['Space.L'],
-        right: theme.spacing['Space.L'],
-        width: '56px',
-        height: '56px',
-        borderRadius: theme.radius['Radius.Full'],
-        backgroundColor: theme.Color.Accent.Surface[1],
-        color: theme.Color.Accent.Content[1],
-        border: 'none',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: theme.effects['Effect.Shadow.Drop.2'],
-        zIndex: 21,
-        overflow: 'hidden',
-        touchAction: 'manipulation'
-    },
-    fabIcon: {
-        fontSize: '28px',
-        lineHeight: 0,
-    }
   };
 
   return (
@@ -96,40 +165,20 @@ const Welcome = () => {
         ref={textareaRef}
         style={styles.editor}
         value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="Start writing..."
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onClick={() => { if (menuOpen) closeMenu(); }} // Close menu on click away
+        placeholder="Start writing... type '/' for commands"
         spellCheck="false"
         autoFocus
       />
-      
-      <SymbolTray onInsert={handleInsert} />
-
-      <ActionPanel 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
-        onInsert={handleInsert} 
+      <CommandMenu 
+        isOpen={menuOpen && filteredCommands.length > 0}
+        position={menuPosition}
+        items={filteredCommands}
+        onSelect={handleInsert}
+        selectedIndex={selectedIndex}
       />
-
-      <motion.button
-        style={styles.fab}
-        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-        whileHover={{ scale: 1.1, boxShadow: theme.effects['Effect.Shadow.Drop.3'] }}
-        whileTap={{ scale: 0.95 }}
-        aria-label={isDrawerOpen ? 'Close actions' : 'Open actions'}
-      >
-          <AnimatePresence mode="wait" initial={false}>
-              <motion.i
-                  key={isDrawerOpen ? 'close' : 'add'}
-                  className={`ph-bold ${isDrawerOpen ? 'ph-x' : 'ph-plus'}`}
-                  style={styles.fabIcon}
-                  variants={fabIconVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-              />
-          </AnimatePresence>
-      </motion.button>
     </main>
   );
 };

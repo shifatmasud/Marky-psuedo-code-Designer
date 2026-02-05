@@ -10,12 +10,11 @@ Hello! You are an AI assistant helping to build this React application. Here are
 -   `metadata.json`
 -   `Theme.tsx`
 -   `hooks/useBreakpoint.tsx`
--   `components/Core/ActionButton.tsx`
+-   `utils/caretPosition.ts`
 -   `components/Core/StateLayer.tsx`
 -   `components/Core/ThemeToggleButton.tsx`
--   `components/Page/NoteEditor.tsx`
--   `components/Section/ActionPanel.tsx`
--   `components/Section/SymbolTray.tsx`
+-   `components/Package/CommandMenu.tsx`
+-   `components/Page/Welcome.tsx`
 -   `README.md`
 -   `LLM.md`
 -   `noteBook.md`

@@ -1,6 +1,6 @@
 # Minimalist Note Editor
 
-This project is a clean, distraction-free note-taking application built with React. It's designed for writers and developers who need a simple interface to quickly structure thoughts using markdown-like symbols and semantic HTML tags.
+This project is a clean, distraction-free note-taking application built with React. It's designed for writers and developers who need a simple interface to quickly structure thoughts. The editor features an intuitive inline command menu; simply type `/` to access a list of symbols and formatting tags.
 
 ## Project Scan Sheet
 
@@ -12,8 +12,8 @@ This project is a clean, distraction-free note-taking application built with Rea
 | **Typography** | Inter (UI), Victor Mono (Editor) |
 | **Icons** | Phosphor Icons (Web Component) |
 | **State Management** | React Context (`Theme`, `Breakpoint`), Local State |
-| **Architecture** | Component-based: `Core` → `Section` → `Page` |
-| **Key Components** | Full-page Text Area, Bottom Action Panel |
+| **Architecture** | Component-based: `Core` → `Package` → `Page` |
+| **Key Components** | Full-page Text Area, Inline Command Menu |
 | **Theme System** | Light/Dark Modes, Responsive Tokens |
 
 ## What's Inside? (ELI10 Version)
@@ -25,9 +25,9 @@ Imagine you have a magical piece of paper that's super clean and easy to write o
 -   **`importmap.js`**: A map that tells our app where to find its tools (like React).
 -   **`Theme.tsx`**: The "master closet" for our app's style (colors, fonts, etc.).
 -   **`components/`**: The LEGO pieces themselves.
-    -   **`Core/`**: The most basic pieces (like the `ActionButton`).
-    -   **`Section/`**: A whole section of the app (the `ActionPanel` at the bottom).
-    -   **`Page/`**: A full screen you see (the `NoteEditor` page).
+    -   **`Core/`**: The most basic pieces (like the `ThemeToggleButton`).
+    -   **`Package/`**: A bundle of pieces forming a feature (the `/` `CommandMenu`).
+    -   **`Page/`**: A full screen you see (the `Welcome` page).
 
 ## Directory Tree
 
@@ -35,29 +35,23 @@ Imagine you have a magical piece of paper that's super clean and easy to write o
 .
 ├── components/
 │   ├── Core/
-│   │   ├── ActionButton.tsx (repurposed DockIcon.tsx)
 │   │   ├── StateLayer.tsx
 │   │   └── ThemeToggleButton.tsx
-│   ├── Page/
-│   │   └── NoteEditor.tsx (repurposed Welcome.tsx)
-│   └── Section/
-│       ├── ActionPanel.tsx (repurposed Dock.tsx)
-│       └── SymbolTray.tsx
+│   ├── Package/
+│   │   └── CommandMenu.tsx
+│   └── Page/
+│       └── Welcome.tsx
 ├── hooks/
 │   └── useBreakpoint.tsx
+├── utils/
+│   └── caretPosition.ts
 ├── README.md
 ├── LLM.md
-├── noteBook.md
-├── bugReport.md
-├── Theme.tsx
-├── importmap.js
-├── index.html
-├── index.tsx
-├── metadata.json
+...
 ```
 
 ## How to Get Started
 
 1.  Open the `index.html` file in a modern web browser.
 2.  Start typing!
-3.  Use the action panel at the bottom to insert structural elements.
+3.  Type `/` to open the command menu and insert structural elements.
