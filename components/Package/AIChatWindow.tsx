@@ -28,10 +28,27 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
   onInsertAtCaret 
 }) => {
   const { theme } = useTheme();
-  const [apiKey, setApiKey] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'system', text: 'I am your writing assistant. Please provide your Gemini API Key below to begin.' }
-  ]);
+  
+  // Persist API Key in localStorage
+  const [apiKey, setApiKey] = useState(() => {
+    try {
+      return localStorage.getItem('geminiApiKey') || '';
+    } catch (e) {
+      console.error("Could not access localStorage", e);
+      return '';
+    }
+  });
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const hasKey = !!(localStorage.getItem('geminiApiKey') || '');
+    return [{
+      role: 'system',
+      text: hasKey
+        ? 'I am your writing assistant. How can I help you today?'
+        : 'I am your writing assistant. Please provide your Gemini API Key below to begin.'
+    }];
+  });
+  
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,6 +58,20 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+  
+  // Save API key to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      const wasKeyMissing = !(localStorage.getItem('geminiApiKey') || '');
+      localStorage.setItem('geminiApiKey', apiKey);
+      if (apiKey && wasKeyMissing) {
+        setMessages([{ role: 'system', text: 'API Key saved. How can I help you today?' }]);
+      }
+    } catch (e) {
+      console.error("Could not access localStorage", e);
+    }
+  }, [apiKey]);
+
 
   const handleSend = async () => {
     if (!apiKey.trim()) {
@@ -90,7 +121,7 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
       }];
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-lite-latest',
+        model: 'gemini-3-flash-preview',
         contents: [
           { role: 'user', parts: [{ text: `CONTEXT: The user is writing a note. The current content of the editor is: \n\n${editorContent}\n\nUSER REQUEST: ${userMessage}` }] }
         ],
@@ -115,7 +146,7 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
 
           // Follow up after tool call to give a textual response
           const followUp = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-lite-latest',
+            model: 'gemini-3-flash-preview',
             contents: [
               { role: 'user', parts: [{ text: userMessage }] },
               { role: 'model', parts: [{ functionCall: call }] },
