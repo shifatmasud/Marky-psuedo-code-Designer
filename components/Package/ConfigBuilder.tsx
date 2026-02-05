@@ -42,6 +42,12 @@ const KEY_COMMANDS = [
     { label: 'border-radius', value: 'border-radius', icon: 'ph-corners-out' },
     { label: 'box-shadow', value: 'box-shadow', icon: 'ph-stack-simple' },
     { label: 'opacity', value: 'opacity', icon: 'ph-circle-half' },
+    { label: 'transform', value: 'transform', icon: 'ph-arrows-clockwise' },
+    { label: 'transform-origin', value: 'transform-origin', icon: 'ph-target' },
+    { label: 'transform-style', value: 'transform-style', icon: 'ph-cube' },
+    { label: 'perspective', value: 'perspective', icon: 'ph-eye' },
+    { label: 'perspective-origin', value: 'perspective-origin', icon: 'ph-target' },
+    { label: 'backface-visibility', value: 'backface-visibility', icon: 'ph-eye-closed' },
     { label: 'width', value: 'width', icon: 'ph-arrows-left-right' },
     { label: 'height', value: 'height', icon: 'ph-arrows-down-up' },
     { label: 'gap', value: 'gap', icon: 'ph-squares-four' },
@@ -138,6 +144,23 @@ const PROPERTY_VALUE_MAP: Record<string, { label: string; value: string; icon: s
     'background': [
         { label: 'none', value: 'none', icon: 'ph-prohibit' },
         { label: 'transparent', value: 'transparent', icon: 'ph-drop' },
+    ],
+    'transform': [
+        { label: 'rotateX()', value: 'rotateX(45deg)', icon: 'ph-arrows-clockwise' },
+        { label: 'rotateY()', value: 'rotateY(45deg)', icon: 'ph-arrows-clockwise' },
+        { label: 'rotateZ()', value: 'rotateZ(45deg)', icon: 'ph-arrows-clockwise' },
+        { label: 'translateZ()', value: 'translateZ(100px)', icon: 'ph-arrows-down-up' },
+        { label: 'translate3d()', value: 'translate3d(0, 0, 0)', icon: 'ph-arrows-out-cardinal' },
+        { label: 'scale3d()', value: 'scale3d(1, 1, 1)', icon: 'ph-arrows-out' },
+        { label: 'perspective()', value: 'perspective(1000px)', icon: 'ph-eye' },
+    ],
+    'transform-style': [
+        { label: 'preserve-3d', value: 'preserve-3d', icon: 'ph-cube' },
+        { label: 'flat', value: 'flat', icon: 'ph-square' },
+    ],
+    'backface-visibility': [
+        { label: 'visible', value: 'visible', icon: 'ph-eye' },
+        { label: 'hidden', value: 'hidden', icon: 'ph-eye-closed' },
     ]
 };
 
