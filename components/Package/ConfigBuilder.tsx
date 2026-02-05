@@ -27,6 +27,9 @@ interface ConfigBuilderProps {
 const KEY_COMMANDS = [
     { label: 'display', value: 'display', icon: 'ph-square' },
     { label: 'position', value: 'position', icon: 'ph-navigation-arrow' },
+    { label: 'flex-direction', value: 'flex-direction', icon: 'ph-arrows-left-right' },
+    { label: 'justify-content', value: 'justify-content', icon: 'ph-align-center-horizontal' },
+    { label: 'align-items', value: 'align-items', icon: 'ph-align-center-vertical' },
     { label: 'margin', value: 'margin', icon: 'ph-arrows-out' },
     { label: 'padding', value: 'padding', icon: 'ph-arrows-in' },
     { label: 'color', value: 'color', icon: 'ph-palette' },
@@ -34,6 +37,7 @@ const KEY_COMMANDS = [
     { label: 'font-size', value: 'font-size', icon: 'ph-text-h' },
     { label: 'line-height', value: 'line-height', icon: 'ph-text-line-spacing' },
     { label: 'font-weight', value: 'font-weight', icon: 'ph-text-bolder' },
+    { label: 'text-align', value: 'text-align', icon: 'ph-text-align-center' },
     { label: 'border', value: 'border', icon: 'ph-rectangle' },
     { label: 'border-radius', value: 'border-radius', icon: 'ph-corners-out' },
     { label: 'box-shadow', value: 'box-shadow', icon: 'ph-stack' },
@@ -45,25 +49,83 @@ const KEY_COMMANDS = [
     { label: 'grid', value: 'grid', icon: 'ph-grid-four' },
     { label: 'z-index', value: 'z-index', icon: 'ph-layers' },
     { label: 'overflow', value: 'overflow', icon: 'ph-intersect' },
+    { label: 'cursor', value: 'cursor', icon: 'ph-hand-pointing' },
 ];
 
-const VALUE_COMMANDS = [
-    { label: 'flex', value: 'flex', icon: 'ph-rows' },
-    { label: 'block', value: 'block', icon: 'ph-square' },
-    { label: 'inline-block', value: 'inline-block', icon: 'ph-rows' },
-    { label: 'none', value: 'none', icon: 'ph-prohibit' },
-    { label: 'absolute', value: 'absolute', icon: 'ph-navigation-arrow' },
-    { label: 'relative', value: 'relative', icon: 'ph-crosshair' },
-    { label: 'fixed', value: 'fixed', icon: 'ph-push-pin' },
-    { label: 'auto', value: 'auto', icon: 'ph-magic-wand' },
-    { label: '100%', value: '100%', icon: 'ph-corners-out' },
-    { label: 'pointer', value: 'pointer', icon: 'ph-hand-pointing' },
-    { label: 'center', value: 'center', icon: 'ph-text-align-center' },
-    { label: 'transparent', value: 'transparent', icon: 'ph-drop' },
+const GLOBAL_VALUES = [
     { label: 'inherit', value: 'inherit', icon: 'ph-arrow-bend-down-right' },
     { label: 'initial', value: 'initial', icon: 'ph-skip-back' },
     { label: 'unset', value: 'unset', icon: 'ph-x-circle' },
+    { label: 'auto', value: 'auto', icon: 'ph-magic-wand' },
 ];
+
+const PROPERTY_VALUE_MAP: Record<string, { label: string; value: string; icon: string }[]> = {
+    'display': [
+        { label: 'flex', value: 'flex', icon: 'ph-rows' },
+        { label: 'block', value: 'block', icon: 'ph-square' },
+        { label: 'inline-block', value: 'inline-block', icon: 'ph-rows' },
+        { label: 'grid', value: 'grid', icon: 'ph-grid-four' },
+        { label: 'none', value: 'none', icon: 'ph-prohibit' },
+    ],
+    'position': [
+        { label: 'relative', value: 'relative', icon: 'ph-crosshair' },
+        { label: 'absolute', value: 'absolute', icon: 'ph-navigation-arrow' },
+        { label: 'fixed', value: 'fixed', icon: 'ph-push-pin' },
+        { label: 'sticky', value: 'sticky', icon: 'ph-anchor' },
+    ],
+    'flex-direction': [
+        { label: 'row', value: 'row', icon: 'ph-arrow-right' },
+        { label: 'column', value: 'column', icon: 'ph-arrow-down' },
+        { label: 'row-reverse', value: 'row-reverse', icon: 'ph-arrow-left' },
+        { label: 'column-reverse', value: 'column-reverse', icon: 'ph-arrow-up' },
+    ],
+    'justify-content': [
+        { label: 'center', value: 'center', icon: 'ph-text-align-center' },
+        { label: 'flex-start', value: 'flex-start', icon: 'ph-text-align-left' },
+        { label: 'flex-end', value: 'flex-end', icon: 'ph-text-align-right' },
+        { label: 'space-between', value: 'space-between', icon: 'ph-arrows-left-right' },
+        { label: 'space-around', value: 'space-around', icon: 'ph-columns' },
+    ],
+    'align-items': [
+        { label: 'center', value: 'center', icon: 'ph-text-align-center' },
+        { label: 'flex-start', value: 'flex-start', icon: 'ph-arrow-up' },
+        { label: 'flex-end', value: 'flex-end', icon: 'ph-arrow-down' },
+        { label: 'stretch', value: 'stretch', icon: 'ph-arrows-out' },
+        { label: 'baseline', value: 'baseline', icon: 'ph-text-line-spacing' },
+    ],
+    'text-align': [
+        { label: 'center', value: 'center', icon: 'ph-text-align-center' },
+        { label: 'left', value: 'left', icon: 'ph-text-align-left' },
+        { label: 'right', value: 'right', icon: 'ph-text-align-right' },
+        { label: 'justify', value: 'justify', icon: 'ph-text-align-justify' },
+    ],
+    'font-weight': [
+        { label: 'normal', value: 'normal', icon: 'ph-text-t' },
+        { label: 'bold', value: 'bold', icon: 'ph-text-bolder' },
+        { label: 'lighter', value: 'lighter', icon: 'ph-text-t' },
+        { label: 'bolder', value: 'bolder', icon: 'ph-text-bolder' },
+    ],
+    'overflow': [
+        { label: 'visible', value: 'visible', icon: 'ph-eye' },
+        { label: 'hidden', value: 'hidden', icon: 'ph-eye-closed' },
+        { label: 'scroll', value: 'scroll', icon: 'ph-arrows-down-up' },
+        { label: 'auto', value: 'auto', icon: 'ph-magic-wand' },
+    ],
+    'cursor': [
+        { label: 'pointer', value: 'pointer', icon: 'ph-hand-pointing' },
+        { label: 'default', value: 'default', icon: 'ph-cursor' },
+        { label: 'move', value: 'move', icon: 'ph-arrows-out-cardinal' },
+        { label: 'not-allowed', value: 'not-allowed', icon: 'ph-prohibit' },
+    ],
+    'color': [
+        { label: 'transparent', value: 'transparent', icon: 'ph-drop' },
+        { label: 'currentColor', value: 'currentColor', icon: 'ph-palette' },
+    ],
+    'background': [
+        { label: 'none', value: 'none', icon: 'ph-prohibit' },
+        { label: 'transparent', value: 'transparent', icon: 'ph-drop' },
+    ]
+};
 
 const ConfigBuilder: React.FC<ConfigBuilderProps> = ({ isOpen, position, onSelect, onClose }) => {
   const { theme } = useTheme();
@@ -202,10 +264,15 @@ const ConfigBuilder: React.FC<ConfigBuilderProps> = ({ isOpen, position, onSelec
 
   useEffect(() => {
     if (menuOpen) {
-      const commands = activeField === 'key' ? KEY_COMMANDS : VALUE_COMMANDS;
+      let commands = KEY_COMMANDS;
+      if (activeField === 'value' && activeIdx !== null) {
+          const key = entries[activeIdx].key.trim().toLowerCase();
+          const propertyValues = PROPERTY_VALUE_MAP[key] || [];
+          commands = [...propertyValues, ...GLOBAL_VALUES];
+      }
       setFilteredCommands(commands.filter(c => c.label.toLowerCase().startsWith(command.toLowerCase())));
     }
-  }, [command, menuOpen, activeField]);
+  }, [command, menuOpen, activeField, activeIdx, entries]);
 
   const styles: { [key: string]: React.CSSProperties } = {
     container: {
