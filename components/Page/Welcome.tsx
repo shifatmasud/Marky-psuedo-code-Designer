@@ -35,7 +35,14 @@ const COMMANDS = [
 
 const Welcome = () => {
   const { theme } = useTheme();
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(() => {
+    try {
+      return localStorage.getItem('marky_content') || '';
+    } catch (error) {
+      console.error("Failed to load content from local storage:", error);
+      return '';
+    }
+  });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // History State
@@ -62,6 +69,15 @@ const Welcome = () => {
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
   const selectionRef = useRef({ start: 0, end: 0 });
+  
+  // Auto-save content to local storage
+  useEffect(() => {
+    try {
+      localStorage.setItem('marky_content', content);
+    } catch (error) {
+      console.error("Failed to save content to local storage:", error);
+    }
+  }, [content]);
 
   const updateContent = useCallback((newText: string, saveToHistory: boolean = true) => {
     if (saveToHistory) {

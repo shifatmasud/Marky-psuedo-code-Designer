@@ -1,6 +1,6 @@
 # Minimalist Note Editor
 
-This project is a clean, distraction-free note-taking application built with React. It's designed for writers and developers who need a simple interface to quickly structure thoughts. The editor features an intuitive inline command menu; simply type `/` to access a list of symbols and formatting tags.
+This project is a clean, distraction-free note-taking application built with React. It's designed for writers and developers who need a simple interface to quickly structure thoughts. The editor features an intuitive inline command menu; simply type `/` to access a list of symbols and formatting tags. Your notes are automatically saved in your browser, so you can pick up where you left off.
 
 **NEW: Formatting Toolbar** - Select any text to bring up a floating toolbar, allowing you to quickly apply **bold**, *italic*, or __underline__ formatting.
 
@@ -56,6 +56,6 @@ Imagine you have a magical piece of paper that's super clean and easy to write o
 ## How to Get Started
 
 1.  Open the `index.html` file in a modern web browser.
-2.  Start typing!
+2.  Start typing! Your work is saved automatically.
 3.  Type `/` to open the command menu and insert structural elements.
 4.  Select text to open the formatting toolbar.
