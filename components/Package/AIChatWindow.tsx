@@ -116,6 +116,61 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
               },
               required: ['text']
             }
+          },
+          {
+            name: 'generate_table',
+            description: 'Generates a markdown table and inserts it at the cursor.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                rows: { type: Type.NUMBER, description: 'Number of data rows.' },
+                cols: { type: Type.NUMBER, description: 'Number of columns.' }
+              },
+              required: ['rows', 'cols']
+            }
+          },
+          {
+            name: 'generate_tree',
+            description: 'Generates a visual tree structure and inserts it at the cursor.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                nodes: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      label: { type: Type.STRING },
+                      depth: { type: Type.NUMBER }
+                    },
+                    required: ['label', 'depth']
+                  }
+                }
+              },
+              required: ['nodes']
+            }
+          },
+          {
+            name: 'generate_config',
+            description: 'Generates a YAML-style config block and inserts it at the cursor.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                entries: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      key: { type: Type.STRING },
+                      value: { type: Type.STRING },
+                      depth: { type: Type.NUMBER }
+                    },
+                    required: ['key', 'value', 'depth']
+                  }
+                }
+              },
+              required: ['entries']
+            }
           }
         ]
       }];
@@ -142,6 +197,62 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
           } else if (call.name === 'insert_text_at_cursor') {
             onInsertAtCaret(call.args.text as string);
             toolResult = "Text inserted successfully.";
+          } else if (call.name === 'generate_table') {
+            const rows = call.args.rows as number;
+            const cols = call.args.cols as number;
+            let table = '\n';
+            table += '| ' + Array(cols).fill('Header').join(' | ') + ' |\n';
+            table += '| ' + Array(cols).fill('---').join(' | ') + ' |\n';
+            for (let i = 0; i < rows; i++) {
+                table += '| ' + Array(cols).fill('Cell').join(' | ') + ' |\n';
+            }
+            onInsertAtCaret(table + '\n');
+            toolResult = "Table generated and inserted.";
+          } else if (call.name === 'generate_tree') {
+            const nodes = call.args.nodes as { label: string, depth: number }[];
+            let result = '';
+            for (let i = 0; i < nodes.length; i++) {
+              const node = nodes[i];
+              if (node.depth === 0 && i === 0) {
+                result += node.label + '\n';
+                continue;
+              }
+              let prefix = '';
+              for (let d = 0; d < node.depth - 1; d++) {
+                let hasMoreSiblingsAtD = false;
+                for (let j = i + 1; j < nodes.length; j++) {
+                  if (nodes[j].depth === d + 1) {
+                    hasMoreSiblingsAtD = true;
+                    break;
+                  }
+                  if (nodes[j].depth < d + 1) break;
+                }
+                prefix += hasMoreSiblingsAtD ? (d === 0 ? '|   ' : '│   ') : '    ';
+              }
+              let isLastSibling = true;
+              for (let j = i + 1; j < nodes.length; j++) {
+                if (nodes[j].depth === node.depth) {
+                  isLastSibling = false;
+                  break;
+                }
+                if (nodes[j].depth < node.depth) break;
+              }
+              const connector = isLastSibling ? '└── ' : '├── ';
+              result += prefix + connector + node.label + '\n';
+            }
+            onInsertAtCaret('\n' + result + '\n');
+            toolResult = "Tree generated and inserted.";
+          } else if (call.name === 'generate_config') {
+            const entries = call.args.entries as { key: string, value: string, depth: number }[];
+            let result = '---\n';
+            entries.forEach(entry => {
+              const indent = '    '.repeat(entry.depth);
+              const val = entry.value ? `: ${entry.value}` : ':';
+              result += `${indent}${entry.key}${val}\n`;
+            });
+            result += '---';
+            onInsertAtCaret('\n' + result + '\n');
+            toolResult = "Config generated and inserted.";
           }
 
           // Follow up after tool call to give a textual response

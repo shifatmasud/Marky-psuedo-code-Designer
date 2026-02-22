@@ -71,6 +71,9 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
       const node = nodes[i];
       if (node.depth === 0 && i === 0) {
         result += node.label + '\n';
+        if (nodes.length > 1 && nodes[1].depth > 0) {
+          result += '|\n';
+        }
         continue;
       }
 
@@ -78,13 +81,13 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
       for (let d = 0; d < node.depth - 1; d++) {
         let hasMoreSiblingsAtD = false;
         for (let j = i + 1; j < nodes.length; j++) {
-          if (nodes[j].depth === d) {
+          if (nodes[j].depth === d + 1) {
             hasMoreSiblingsAtD = true;
             break;
           }
-          if (nodes[j].depth < d) break;
+          if (nodes[j].depth < d + 1) break;
         }
-        prefix += hasMoreSiblingsAtD ? '│   ' : '    ';
+        prefix += hasMoreSiblingsAtD ? (d === 0 ? '|   ' : '│   ') : '    ';
       }
 
       let isLastSibling = true;
@@ -96,7 +99,7 @@ const TreeBuilder: React.FC<TreeBuilderProps> = ({ isOpen, position, onSelect, o
         if (nodes[j].depth < node.depth) break;
       }
 
-      const connector = isLastSibling ? '└── ' : '├── ';
+      const connector = isLastSibling ? '└── ' : (node.depth === 1 ? '|── ' : '├── ');
       result += prefix + connector + node.label + '\n';
     }
     return result;
